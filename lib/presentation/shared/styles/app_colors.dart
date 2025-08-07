@@ -52,5 +52,7 @@ class AppColors {
   static const Color error = Color(0xFFF44336); // Merah untuk error
   static const Color warning = Color(0xFFFFC107);
 
-  static var textPrimary; // Kuning untuk warning
+  static var textPrimary;
+
+  static var white; // Kuning untuk warning
 }

@@ -1,33 +1,25 @@
-import 'package:cosmicscans/domain/entities/chapter.dart'; // Import entitas Chapter
 import 'package:equatable/equatable.dart';
+import 'chapter.dart'; // ⬅️ Tambahkan ini kalau belum
 
 class Comic extends Equatable {
   final String title;
-  final String cover;
   final String slug;
-  final String? badge; // Nullable
-  final String? genre; // Nullable
-  final String? rating; // Nullable
-  final List<Chapter>? dataChapter; // Nullable, untuk project/latest
+  final String cover;
+  final String? badge;
+  final String genre;
+  final String rating;
+  final List<Chapter> chapters; // ⬅️ Properti penting
 
   const Comic({
     required this.title,
-    required this.cover,
     required this.slug,
-    this.badge,
-    this.genre,
-    this.rating,
-    this.dataChapter,
+    required this.cover,
+    required this.badge,
+    required this.genre,
+    required this.rating,
+    this.chapters = const [], // ⬅️ Default kosong
   });
 
   @override
-  List<Object?> get props => [
-    title,
-    cover,
-    slug,
-    badge,
-    genre,
-    rating,
-    dataChapter,
-  ];
+  List<Object?> get props => [title, slug, cover, badge, genre, rating, chapters];
 }
