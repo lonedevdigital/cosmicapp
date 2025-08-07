@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:cosmicscans/core/network/api_client.dart';
 import 'package:cosmicscans/app/config/api_config.dart';
+import 'package:cosmicscans/app/utils/device_utils.dart'; // Tambahan
 
 class RegisterProvider extends ChangeNotifier {
   final ApiClient _apiClient = ApiClient();
@@ -15,24 +16,21 @@ class RegisterProvider extends ChangeNotifier {
     required String username,
     required String email,
     required String password,
-    String? deviceId,
   }) async {
     _setLoading(true);
 
     try {
+      final deviceId = await DeviceUtils.getDeviceId(); // Dapatkan device ID
+
       final requestData = {
         'username': username.trim(),
         'email': email.trim().toLowerCase(),
         'password': password,
+        'device_id': deviceId, // Sesuai format backend
       };
 
-      if (deviceId != null && deviceId.isNotEmpty) {
-        requestData['deviceId'] = deviceId;
-      }
-
-      // GUNAKAN path relatif + jaga headers global
       final response = await _apiClient.post(
-        ApiConfig.registerPath, // HARUS PAKAI RELATIVE PATH
+        ApiConfig.registerPath,
         data: requestData,
       );
 
@@ -51,7 +49,20 @@ class RegisterProvider extends ChangeNotifier {
 
     } on DioException catch (e) {
       final res = e.response;
-      errorMessage = res?.data['message'] ?? 'Gagal mendaftar. Coba lagi.';
+      if (res != null && res.data != null && res.data is Map<String, dynamic>) {
+        errorMessage = res.data['message'] ?? 'Gagal mendaftar. Coba lagi.';
+        if (res.data['errors'] != null) {
+          final errors = res.data['errors'] as Map<String, dynamic>;
+          if (errors.isNotEmpty) {
+            final firstError = errors.values.first;
+            if (firstError is List && firstError.isNotEmpty) {
+              errorMessage = firstError[0];
+            }
+          }
+        }
+      } else {
+        errorMessage = 'Gagal mendaftar. Coba lagi.';
+      }
     } catch (e) {
       errorMessage = 'Kesalahan tidak terduga. Coba lagi.';
     }

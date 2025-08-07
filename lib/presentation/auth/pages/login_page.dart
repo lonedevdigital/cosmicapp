@@ -1,9 +1,10 @@
-// lib/presentation/auth/pages/login_page.dart
+import 'package:cosmicscans/app/routes/app_routes.dart';
+import 'package:cosmicscans/presentation/auth/providers/login_provider.dart';
 import 'package:cosmicscans/presentation/shared/styles/app_colors.dart';
 import 'package:cosmicscans/presentation/shared/styles/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cosmicscans/app/routes/app_routes.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,22 +14,51 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool _rememberMe = false;
   bool _isPasswordVisible = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
+  Future<void> _handleLogin(BuildContext context) async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final loginProvider = context.read<LoginProvider>();
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+
+    final success = await loginProvider.login(
+      username: username,
+      password: password,
+    );
+
+    if (success) {
+      if (mounted) context.go(AppRoutes.homePath);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(loginProvider.errorMessage ?? 'Login gagal'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final loginProvider = context.watch<LoginProvider>();
+    final isLoading = loginProvider.isLoading;
+
     final size = MediaQuery.of(context).size;
     final isSmallScreen = size.height < 700;
 
@@ -46,10 +76,8 @@ class _LoginPageState extends State<LoginPage> {
               child: Form(
                 key: _formKey,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Logo
                     Center(
                       child: Image.asset(
                         'assets/images/cosmic_toon_logo.png',
@@ -58,104 +86,30 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     SizedBox(height: isSmallScreen ? 20 : 30),
 
-                    // Toggle Sign In / Sign Up
-                    Center(
-                      child: Container(
-                        height: 50,
-                        width: 280,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        child: Row(
-                          children: [
-                            // Sign In Button (Active)
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [AppColors.buttonGradientStart, AppColors.buttonGradientEnd],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(25),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Sign In',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Sign Up Button
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => context.go(AppRoutes.registerPath),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(25),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'Sign Up',
-                                      style: TextStyle(
-                                        color: AppColors.primary ?? Colors.purple,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    _buildToggleLoginRegister(),
+
                     SizedBox(height: isSmallScreen ? 20 : 30),
 
-                    // Username/Email Field
+                    // Username
                     TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: 'Username',
-                        hintText: 'Enter your username',
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                      controller: _usernameController,
+                      decoration: _inputDecoration(
+                        label: 'Username',
+                        hint: 'Enter your username',
                       ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) =>
-                      value != null && value.isNotEmpty
+                      validator: (value) => value != null && value.isNotEmpty
                           ? null
                           : 'Username tidak boleh kosong',
                     ),
                     SizedBox(height: isSmallScreen ? 12 : 16),
 
-                    // Password Field
+                    // Password
                     TextFormField(
                       controller: _passwordController,
                       obscureText: !_isPasswordVisible,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        hintText: 'Enter your password',
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                      decoration: _inputDecoration(
+                        label: 'Password',
+                        hint: 'Enter your password',
                         suffixIcon: IconButton(
                           icon: Icon(
                             _isPasswordVisible
@@ -170,82 +124,65 @@ class _LoginPageState extends State<LoginPage> {
                           },
                         ),
                       ),
-                      validator: (value) =>
-                      value != null && value.isNotEmpty
+                      validator: (value) => value != null && value.isNotEmpty
                           ? null
                           : 'Password tidak boleh kosong',
                     ),
                     SizedBox(height: isSmallScreen ? 12 : 16),
 
-                    // Remember Me & Forgot Password Row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Remember Me Checkbox
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: Checkbox(
-                                value: _rememberMe,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _rememberMe = value ?? false;
-                                  });
-                                },
-                                activeColor: AppColors.primary ?? Colors.purple,
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                visualDensity: VisualDensity.compact,
-                              ),
+                            Checkbox(
+                              value: _rememberMe,
+                              onChanged: (val) {
+                                setState(() {
+                                  _rememberMe = val ?? false;
+                                });
+                              },
+                              activeColor: AppColors.primary,
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 4),
                             Text(
                               'Keep me signed in',
                               style: TextStyle(
-                                color: AppColors.textGrey ?? Colors.grey,
                                 fontSize: 12,
+                                color: AppColors.textGrey,
                               ),
-                            ),
+                            )
                           ],
                         ),
-                        // Forgot Password Link
-                        GestureDetector(
-                          onTap: () {
+                        TextButton(
+                          onPressed: () {
                             // TODO: Implement forgot password
                           },
                           child: Text(
-                            'Forgot your password ?',
+                            'Forgot your password?',
                             style: TextStyle(
-                              color: AppColors.primary ?? Colors.purple,
+                              color: AppColors.primary,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ),
+                        )
                       ],
                     ),
                     SizedBox(height: isSmallScreen ? 24 : 32),
 
-                    // Sign In Button
-                    _buildGradientButton(
+                    isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : _buildGradientButton(
                       text: 'Sign In',
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          // TODO: Implement actual login logic
-                          print('Username: ${_emailController.text}');
-                          print('Password: ${_passwordController.text}');
-                          print('Remember Me: $_rememberMe');
-
-                          // Navigate to home (temporary)
-                          context.go(AppRoutes.homePath);
-                        }
-                      },
+                      onPressed: () => _handleLogin(context),
                     ),
                     SizedBox(height: isSmallScreen ? 16 : 20),
 
-                    // Register Link
                     Center(
                       child: GestureDetector(
                         onTap: () => context.go(AppRoutes.registerPath),
@@ -288,7 +225,10 @@ class _LoginPageState extends State<LoginPage> {
       height: 48,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.buttonGradientStart, AppColors.buttonGradientEnd],
+          colors: [
+            AppColors.buttonGradientStart,
+            AppColors.buttonGradientEnd
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -305,6 +245,87 @@ class _LoginPageState extends State<LoginPage> {
         ),
         child: Text(text, style: AppTextStyles.buttonText),
       ),
+    );
+  }
+
+  Widget _buildToggleLoginRegister() {
+    return Center(
+      child: Container(
+        height: 50,
+        width: 280,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Row(
+          children: [
+            // Sign In Active
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      AppColors.buttonGradientStart,
+                      AppColors.buttonGradientEnd
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Sign In',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Sign Up
+            Expanded(
+              child: GestureDetector(
+                onTap: () => context.go(AppRoutes.registerPath),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Sign Up',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration({
+    required String label,
+    required String hint,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      suffixIcon: suffixIcon,
     );
   }
 }

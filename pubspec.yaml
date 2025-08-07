@@ -36,7 +36,7 @@ dependencies:
   dio: ^5.4.3+1 # Update ke versi stabil terbaru jika memungkinkan, atau tetap di 5.4.0
   pretty_dio_logger: ^1.3.1 # Untuk logging Dio
   cached_network_image: ^3.3.1 # Untuk caching gambar
-  shared_preferences: ^2.2.3 # Update ke versi stabil terbaru jika memungkinkan, atau tetap di 2.2.2
+  shared_preferences: ^2.5.3 # Update ke versi stabil terbaru jika memungkinkan, atau tetap di 2.2.2
   flutter_riverpod: ^2.4.9 # Atau package state management pilihan Anda
   json_annotation: ^4.8.1
   go_router: ^13.2.0 # Update ke versi stabil terbaru jika memungkinkan, atau tetap di 13.0.1
@@ -44,6 +44,7 @@ dependencies:
   logger: ^2.0.2+1 # Untuk logging aplikasi
   equatable: ^2.0.5 # Untuk mempermudah perbandingan objek (model, entity)
   provider: ^6.1.5
+  device_info_plus: ^11.5.0
 
 dev_dependencies:
   flutter_test:

@@ -249,7 +249,11 @@ class _RegisterPageState extends State<RegisterPage> {
                           : _buildGradientButton(
                         text: 'Register',
                         onPressed: () async {
+                          print("🧪 Tombol REGISTER ditekan");
+
                           if (_formKey.currentState!.validate()) {
+                            print("✅ Form VALID - Memanggil provider.register()");
+
                             final success = await provider.register(
                               email: _emailController.text.trim(),
                               username: _usernameController.text.trim(),
@@ -257,23 +261,28 @@ class _RegisterPageState extends State<RegisterPage> {
                             );
 
                             if (success && mounted) {
+                              print("✅ Register berhasil");
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Berhasil daftar!'),
-                                ),
+                                const SnackBar(content: Text('Berhasil daftar!')),
                               );
                               context.go(AppRoutes.loginPath);
-                            } else if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                      provider.errorMessage ?? 'Terjadi kesalahan'
+                            } else {
+                              print("❌ Register gagal: ${provider.errorMessage}");
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      provider.errorMessage ?? 'Terjadi kesalahan',
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
+                              }
                             }
+                          } else {
+                            print("❌ Form TIDAK VALID");
                           }
                         },
+
                       ),
                       SizedBox(height: isSmallScreen ? 16 : 20),
 

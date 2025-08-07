@@ -1,9 +1,9 @@
 class ApiConfig {
   // Base URL utama
   static const String baseUrl = "https://lonedev.my.id/api/v1";
-
-  // Global API Key untuk semua request
-  static const String apiKey = "123";
+  static const String apiKey = "123"; // ganti sesuai yang kamu pakai
+  static const String registerPath = "/users/register";
+  static const String loginPath = "/users/login";
 
   // USER/AUTH Endpoints
   static const String login = "$baseUrl/login";
@@ -18,9 +18,6 @@ class ApiConfig {
   static const String latest = "$baseUrl/latest";
   static const String searchManga = "$baseUrl/searchManga";
   static const String bookmark = "$baseUrl/bookmark";
-
-  static const String registerPath = "/users/register";
-  static const String loginPath = "/users/login";
 
   // Dynamic Endpoints (detail, chapter, etc)
   static String seriesDetail(String slug) => "$baseUrl/seriesDetail/$slug";
